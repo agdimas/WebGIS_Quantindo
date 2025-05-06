@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebGIS Quantindo</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html, body, #map {
+      height: 100%; width: 100%; margin: 0; padding: 0;
+    }
+    #logo-perusahaan {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      background: rgba(255,255,255,0.8);
+      padding: 3px 6px;
+      border-radius: 4px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    #bookmark {
+      position: absolute;
+      top: 20px;
+      right: 10px;
+      z-index: 999;
+      background: white;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    #lokasi {
+      padding: 4px;
+      font-size: 15px;
+      width: 180px;
+    }
+  </style>
+</head>
+<body>
+  <div id="logo-perusahaan">
+    <img src="img/logo_kiri.png" height="28" alt="Logo Kiri" />
+    <img src="img/logo_kanan.png" height="28" alt="Logo Kanan" />
+  </div>
+  <div id="bookmark">
+    <label for="lokasi">📍 Lompat ke lokasi:</label><br>
+    <select id="lokasi">
+      <option disabled selected>Pilih lokasi</option>
+    </select>
+  </div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([-2.5, 115], 5);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const areaCoordinates = {};
+    const lokasiDropdown = document.getElementById('lokasi');
+
+    fetch('tiles/index.json')
+      .then(res => res.json())
+      .then(folders => {
+        folders.forEach(folder => {
+          const infoPath = `tiles/${folder}/info.json`;
+          const tileMetaPath = `tiles/${folder}/${folder}.json`;
+
+          Promise.all([
+            fetch(infoPath).then(res => res.json()),
+            fetch(tileMetaPath).then(res => res.json())
+          ]).then(([info, tilemeta]) => {
+            const b = tilemeta.bounds.split(',').map(parseFloat);
+            const center = [(b[1] + b[3]) / 2, (b[0] + b[2]) / 2];
+
+            const bounds = [[b[1], b[0]], [b[3], b[2]]];
+            const boundsPolygon = L.rectangle(bounds, { color: '#3388ff', weight: 1, fillOpacity: 0 });
+            boundsPolygon.addTo(map);
+
+            boundsPolygon.on('click', function(e) {
+              const popup = `<b>${info.nama}</b><br>Kamera: ${info.kamera}<br>` +
+                            `Resolusi: ${info.resolusi}<br>GSD: ${info.gsd}<br>` +
+                            `Tanggal: ${info.tanggal}`;
+              L.popup()
+                .setLatLng(e.latlng)
+                .setContent(popup)
+                .openOn(map);
+            });
+
+            const tileLayer = L.tileLayer(`tiles/${folder}/{z}/{x}/{y}.${tilemeta.format}`, {
+              minZoom: tilemeta.minZoom,
+              maxZoom: tilemeta.maxZoom,
+              attribution: `Orthophoto ${info.nama}`
+            });
+
+            tileLayer.addTo(map);
+            areaCoordinates[info.nama.toLowerCase()] = L.latLng(center);
+
+            const opt = document.createElement('option');
+            opt.value = info.nama.toLowerCase();
+            opt.textContent = info.nama;
+            lokasiDropdown.appendChild(opt);
+          });
+      });
+
+      lokasiDropdown.addEventListener('change', function() {
+        const selected = this.value;
+        if (areaCoordinates[selected]) {
+          map.setView(areaCoordinates[selected], 17);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

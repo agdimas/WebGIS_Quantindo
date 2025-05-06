@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "desa_kudus",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "full_id": "n1308716408", "osm_id": "1308716408", "osm_type": "node", "place": "village", "name": "Larikrejo" }, "geometry": { "type": "Point", "coordinates": [ 110.8575435, -6.8890231 ] } },
+{ "type": "Feature", "properties": { "full_id": "n10981405646", "osm_id": "10981405646", "osm_type": "node", "place": "village", "name": "Ngeseng" }, "geometry": { "type": "Point", "coordinates": [ 110.8724248, -6.8849944 ] } },
+{ "type": "Feature", "properties": { "full_id": "n11744856875", "osm_id": "11744856875", "osm_type": "node", "place": "village", "name": "Ngelo" }, "geometry": { "type": "Point", "coordinates": [ 110.8624873, -6.8834766 ] } }
+]
+}
